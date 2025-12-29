@@ -1,0 +1,219 @@
+\documentclass[conference]{IEEEtran}
+\parindent 0px
+\usepackage{graphicx} % Required for inserting images
+\usepackage[top=0.75in, left=0.75in, right=0.75in ]{geometry}
+\title{Improving the Robustness of Spoken Language Identification Systems Against Physical-Access Replay Attacks}
+\date{}
+\begin{document}
+
+\author{\IEEEauthorblockN{R.V.Sontakke, R.Labade, G.K.Vakeel}}
+\maketitle
+\vspace{0.5cm}
+Author
+
+\section*{Abstract}
+Multilingual speech processing applications require the use of Spoken Language Identification (LID) systems. Recent deep learning-based LID systems perform very poorly in real-world scenarios because of acoustic mismatches, even though they achieve high accuracy under controlled conditions. Physical-access replay attacks, in which real speech is replayed via loudspeakers and re-recorded under various hardware and environmental conditions, are an important but little-studied source of mismatch.\\
+Language identification performance under replay conditions is benchmarked using a Light Convolutional Neural Network (LCNN) in conjunction with a Linear Frequency Cepstral Coefficient (LFCC) representation. Furthermore, robustness against complex replay distortions is assessed using a state-of-the-art replay-aware architecture based on a self-supervised Web2Web2Assist encoder integrated with the AASIST framework.\\
+Replay-induced degradation is measured using objective signal-quality metrics such as Signal-to-Noise Ratio (SNR) and Perceptual Evaluation of Speech Quality (PESQ). The LFCC–LCNN baseline performs significantly worse under far-field and cascaded replay conditions, according to experimental analysis whereas the Wab2Web2AASIST model shows better robustness. Additionally, replay-based data augmentation improves generalisation in a variety of physical-access scenarios. These results highlight how important it is to explicitly model physical-access replay attacks when developing reliable LID systems for practical implementation.
+\section*{Keywords}
+Spoken Language Identification, Physical-Access Replay Attacks, Audio Spoofing, Robust Speech Processing, Data Augmentation, Assist
+\section{Introduction}
+Language Identification (LID) systems are pivotal elements in multilingual speech processing applications. However, these systems experience considerable difficulties when they deal with non lingual domain mismatches, especially physical, access spoofing attacks.\\
+Physical, access spoofing, e.g. , where a recording is played by a speaker and the playback is recorded again, thus creating a new recording, is a source of harm that is common to both Automatic Speaker Verification (ASV) and LID systems. The difficulty is in producing enough replay, spoofed data with in-depth metadata that illustrates various acoustic conditions such as: 
+\begin{itemize}
+    \item Source
+    \item Recorder distance
+    \item Recording device
+    \item FeaturesRoom acoustics and reverberation
+    \item Far field vs. near field
+    \item Recording condition angles for sound source localization
+\end{itemize}
+%\newgeometry{top=0.75in, left=0.75in, right=0.75in}
+This project steps in to close the above mentioned gaps by curating a comprehensive spoken physical access parallel database in Marathi and designing the detection systems with robustness. \\
+Our work: 
+\begin{enumerate}
+    \item  Creation of a comprehensive metadata, rich replay attack dataset
+    \item  Initiation and benchmarking of LFCC, LCNN baseline model
+    \item Investigation of data quality filtering, and class imbalance effects
+    \item Using multiple evaluation metrics for benchmarking (SNR, PESQ, WER, LID confidence)
+    \item Suggestion of AASIST as a state of the art model for generalization 
+\end{enumerate} 
+\vspace{0.25cm}
+\section{Related Work} 
+\vspace{0.5cm}
+    \subsection{Speaker Spoofing and Anti-Spoofing}
+
+The Automatic Speaker Verification systems have been looked at a lot to see if they can be tricked by voices. These fake voices can come from computers that can make speech or change someones voice to sound like someone. There are also attacks where someone records a persons voice and plays it back to trick the system. The ASVspoof challenge has helped create tests and rules for people who want to make the Automatic Speaker Verification systems safer, from these kinds of attacks.
+
+\subsection{Language Identification Systems}
+
+Language Identification systems usually look at how words sound and the rhythm of speech to tell languages apart. These days people are using methods that involve complicated computer programs, like Convolutional Neural Networks, Recurrent Neural Networks and attention mechanisms.. The thing is, most of these studies are done with clean audio and they do not think about what happens if someone tries to trick the system with fake audio, which is called a spoofing attack and Language Identification systems need to be able to deal with this.
+
+\subsection{Physical Access Spoofing}
+
+The ASVspoof 2021 Physical Access dataset is really important for understanding what happens with replay attacks. We have found out that things, like the environment how away something is being recorded and what kind of device is being used can really affect how well we can detect spoofing. The ASVspoof 2021 Physical Access dataset helps us learn more about replay attack characteristics.
+
+\subsection{Feature Representations}
+
+Linear Frequency Cepstral Coefficients (LFCC) have emerged as superior features for anti-spoofing compared to traditional MFCCs due to their ability to capture channel and environmental distortions more effectively.
+%\newgeometry{top=1cm, left=0.75cm, right=1cm}
+\section{Methodology}
+
+\subsection{Data Collection Framework}
+
+We designed an extensive data gathering protocol that recorded different acoustic scenarios .
+\vspace{0.25cm}
+
+\textbf{Data Sources:}
+\begin{itemize}
+    \item \textbf{IITH Marathi Dataset}: The main source that offers clean, high quality Marathi speech from multiple speakers
+    \item \textbf{VoxLingua107 Marathi Subset}: Conversational speech from everyday audio for generalization testing
+\end{itemize}
+
+\textbf{Recording Protocol:}
+\begin{itemize}
+    \item  More than 200 speech samples with controlled variations
+    \item  Several recording devices and playback systems
+    \item Variations in microphone to speaker distance
+    \item Different room environments with varying reverberation
+    \item Multiple speaker orientations and azimuth angles
+    \item Both male and female speakers included
+\end{itemize}
+\textbf{Metadata Tracking:}
+Each sample was recorded with detailed metadata that included device specifications,\\
+\vspace{0.25cm}
+environmental conditions, distance measurements, orientation angles, and quality labels.
+
+\subsection{LFCC-LCNN Architecture}
+
+\subsubsection{Feature Engineering (LFCC)} 
+
+\textbf{Audio Parameters}
+\begin{itemize}
+    \item Sample rate: 16,000 Hz
+    \item Frame size: 400 samples (25 ms)
+    \item Hop size: 160 samples (10 ms)
+\end{itemize}
+\textbf{STFT Parameters}
+\begin{itemize}
+    \item FFT size: 512
+    \item Window: Hann
+    \item Power: 2 (magnitude squared)
+\end{itemize}
+\textbf{LFCC Transform:}
+\begin{itemize}
+    \item Number of coefficients: 60
+    \item Filterbank type: Linear
+    \item No deltas or delta-deltas
+\end{itemize}
+The reason is that LFCCs give an clear picture of the linear frequency spectrum. This means they can effectively catch the kinds of problems that happen when someone tries to fake or distort a signal, which's what happens in spoofing attacks. LFCCs are really good, at picking up on these issues.
+
+\subsubsection{LCNN Architecture}
+
+The Lightweight CNN is made up of four blocks that come one, after the other. These blocks are connected in a sequence. The Lightweight CNN has these four convolutional blocks.\\
+\vspace{0cm}\\
+Channel Progression: 1 → 16 → 32 → 64 → 128\\
+\vspace{0cm}\\
+\textbf{Max-Feature-Map (MFM) Activation:}
+\begin{itemize}
+    \item Replaces standard ReLU activation
+    \item Computes 2×N output channels
+    \item Takes element-wise maximum: Output = $max(Channel_i, Channel_{i+N})$
+    \item Aids in feature selection and model compactness
+\end{itemize}
+\textbf{Output Layer:}
+\begin{itemize}
+    \item The Global Average Pooling technique or Global Average Pooling takes these maps of features and turns them into something much smaller, which is a 128-dimensional embedding. This Global Average Pooling process is really good at simplifying things. The Global Average Pooling helps to reduce all the information, in the feature maps into this 128-dimensional embedding.
+    \item \textbf{Binary classification:} Bonafide vs. Spoof
+\end{itemize}
+\subsection{Evaluation Metrics}
+
+\textbf{Primary Metrics:}
+\begin{itemize}
+    \item Equal Error Rate (EER): Point where FAR = FRR
+    \item Minimum Detection Cost Function (minTDCF): Weighted error metric
+\end{itemize}
+
+\textbf{Audio Quality Metrics:}
+\begin{itemize}
+    \item Signal-to-Noise Ratio (SNR): Quantitative assessment of recording quality
+    \item Perceptual Evaluation of Speech Quality (PESQ): Speech clarity and intelligibility
+    \item Word Error Rate (WER): Transcription accuracy using Whisper ASR
+\end{itemize}
+
+\textbf{LID Benchmarking:}
+\begin{itemize}
+    \item Whisper (large) model for language prediction
+    \item Confidence scores for predicted language labels
+\end{itemize}
+
+\subsubsection{AASIST Architecture}
+
+Audio Anti-Spoofing using Integrated Spectro-Temporal Graph Attention Networks:\\
+
+\vspace{0cm}
+\textbf{Key Components:}
+\begin{itemize}
+    \item  RawNet2-based encoder for raw waveform processing
+    \item Parallel processing in temporal and spectral domains
+    \item Heterogeneous Stacking Graph Attention Layer (HS-GAL)
+    \item Max Graph Operation (MGO) for modeling diverse artifacts
+    \item Superior generalization to unknown attacks and channel variations
+\end{itemize}
+
+\textbf{SSL-AASIST Variant:}
+\begin{itemize}
+    \item  Integrates Self-Supervised Learning encoder (Wav2Vec 2.0)
+    \item Enhanced robustness against deepfakes
+    \item Captures long-range temporal context and intricate speech artifacts\\
+\end{itemize}
+\section{Experiments and Results}
+\subsection{Experimental Setup} 
+
+\textbf{Training Framework:} PyTorch ,Pre training on ASVspoof 2021 PA dataset Fine tuning and evaluation on the Marathi dataset collected Cross validation across different recording conditions.
+SNR and PESQ values for each audios were obtained using Python.\\
+
+\textbf{Results:} 
+\begin{center}
+    \includegraphics[width=6in, height = 3.5in]{SNR.png}
+\end{center}
+
+\subsection{Impact of Data Quality Filtering}
+
+\textbf{Problem}: The presence of poor quality audio in the training data causes the model to have weak generalization power.\\
+
+\textbf{Filtering Criteria:}
+
+SNR thresholds (Signal to Noise Ratio) Acoustic fidelity measurements.\\
+
+\textbf{Results:}
+
+Before Filtering: EER = 18. 4$\%$\\
+After Filtering: EER = 11. 2$\%$\\
+Improvement: 39. 1$\%$ relative reduction in EER.\\
+
+\vspace{0in}
+\textbf{Analysis:} 
+
+Filtering helps to remove those samples that are ambiguous and might be heavily corrupted, thus making the model have clearer decision boundaries between the bonafide and the spoofed features. This shows that the quality of data plays a very critical role in training robust anti spoofing models.
+
+\subsection{Impact of class Imbalance:}
+
+\textbf{Key Findings:}
+
+The most apparent symptom of severe imbalance is the divergence between FAR and FRR. The model generally behaves in such a way as to favor the majority class, thus increasing the total number of error rates.The use of balanced training data reaches the highest level of performance Mitigation strategies ($e.g.$ weighted loss) can facilitate training to become more stable. 
+
+\subsection{WER Analysis:}
+
+\textbf{Findings:}
+
+Transcription accuracy varies greatly from one sample to another Recording conditions have a major impact on the performance of ASR . 
+Error rates were particularly high for:
+\begin{itemize}
+    \item Longer recordings.
+    \item Low signal quality audios
+    \item Greater speaker to microphone distance
+\end{itemize}
+It is also worth mentioning that the complete failure to transcribe indicates that Whisper has limitations when it comes to degraded audio.
+
+\end{document}
